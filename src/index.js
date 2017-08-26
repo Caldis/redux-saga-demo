@@ -3,8 +3,11 @@ import ReactDOM from 'react-dom'
 import { applyMiddleware, createStore, compose } from 'redux'
 import { Provider } from 'react-redux'
 import createSagaMiddleware from 'redux-saga'
-import { Router, Route, browserHistory } from 'react-router'
-
+import { Router, Route, browserHistory, IndexRoute } from 'react-router'
+import {  
+  checkIndexAuthorization,
+  checkWidgetAuthorization,
+} from './lib/check-auth'
 // Import all of our components
 import App from './App'
 import Login from './login'
@@ -45,9 +48,10 @@ ReactDOM.render(
   <Provider store={store}>
     <Router history={browserHistory}>
       <Route path="/" component={App} >
+        <IndexRoute onEnter={checkIndexAuthorization(store)} />
         <Route path="/login" component={Login} />
         <Route path="/signup" component={Signup} />
-        <Route path="/widgets" component={Widgets} />
+        <Route onEnter={checkWidgetAuthorization(store)} path="/widgets" component={Widgets} />
       </Route>
     </Router>
   </Provider>,
