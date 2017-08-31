@@ -47,7 +47,9 @@ export function checkIndexAuthorization ({ dispatch }) {
 
       return next()
     }
-
+    // 登陆界面也是同样设置
+    if (nextState.location.pathname !== '/login') replace('login')  
+    return next()
     // Otherwise let's take them to login!
     replace('login')
     return next()

@@ -49,7 +49,7 @@ ReactDOM.render(
     <Router history={browserHistory}>
       <Route path="/" component={App} >
         <IndexRoute onEnter={checkIndexAuthorization(store)} />
-        <Route path="/login" component={Login} />
+        <Route onEnter={checkIndexAuthorization(store)} path="/login" component={Login} />  
         <Route path="/signup" component={Signup} />
         <Route onEnter={checkWidgetAuthorization(store)} path="/widgets" component={Widgets} />
       </Route>
