@@ -1,11 +1,12 @@
-import React, { Component, PropTypes } from 'react'  
-import { reduxForm, Field } from 'redux-form'  
+import React, { Component, PropTypes } from 'react'
+import { reduxForm, Field } from 'redux-form'
 import { connect } from 'react-redux'
 
-import Messages from '../notifications/Messages'  
+import Messages from '../notifications/Messages'
 import Errors from '../notifications/Errors'
 
-import { widgetCreate } from './actions'
+// include our widgetRequest action
+import { widgetCreate, widgetRequest } from './actions'
 
 // Our validation function for `name` field.
 const nameRequired = value => (value ? undefined : 'Name Required')
@@ -15,7 +16,7 @@ class Widgets extends Component {
     handleSubmit: PropTypes.func.isRequired,
     invalid: PropTypes.bool.isRequired,
     client: PropTypes.shape({
-      id: PropTypes.number.isRequired,
+      id: PropTypes.string.isRequired,
       token: PropTypes.object.isRequired,
     }),
     widgets: PropTypes.shape({
@@ -26,15 +27,32 @@ class Widgets extends Component {
       errors: PropTypes.array,
     }).isRequired,
     widgetCreate: PropTypes.func.isRequired,
+    widgetRequest: PropTypes.func.isRequired,
     reset: PropTypes.func.isRequired,
   }
+  constructor (props) {
+    super(props)
+    // call the fetch when the component starts up
+    this.fetchWidgets()
+  }
+
+  // the helper function for requesting widgets
+  // with our client as the parameter
+  fetchWidgets = () => {
+    const { client, widgetRequest } = this.props
+    if (client && client.token) return widgetRequest(client)
+    return false
+  }
+
+
   submit = (widget) => {
     const { client, widgetCreate, reset } = this.props
     // call to our widgetCreate action.
     widgetCreate(client, widget)
     // reset the form upon submit.
     reset()
-  }  
+  }
+
   renderNameInput = ({ input, type, meta: { touched, error } }) => (
     <div>
       {/* Spread RF's input properties onto our input */}
@@ -59,6 +77,7 @@ class Widgets extends Component {
       }
     </div>
   )
+
   render () {
     // pull in all needed props for the view
     // `invalid` is a value that Redux Form injects
@@ -76,6 +95,7 @@ class Widgets extends Component {
         errors,
       },
     } = this.props
+
     return (
       <div className="widgets">
         <div className="widget-form">
@@ -124,21 +144,52 @@ class Widgets extends Component {
             )}
           </div>
         </div>
+        {/* The Widget List Area */}
+        <div className="widget-list">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Size</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list && !!list.length && (
+                list.map(widget => (
+                  <tr key={widget.id}>
+                    <td>
+                      <strong>{`${widget.name}`}</strong>
+                    </td>
+                    <td>
+                      {`${widget.description}`}
+                    </td>
+                    <td>
+                      {`${widget.size}`}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+          {/* A convenience button to refetch on demand */}
+          <button onClick={this.fetchWidgets}>Refetch Widgets!</button>
+        </div>
       </div>
     )
   }
 }
 
 // Pull in both the Client and the Widgets state
-const mapStateToProps = state => ({  
+const mapStateToProps = state => ({
   client: state.client,
   widgets: state.widgets,
 })
 
 // Make the Client and Widgets available in the props as well
 // as the widgetCreate() function
-const connected = connect(mapStateToProps, { widgetCreate })(Widgets)  
-const formed = reduxForm({  
+const connected = connect(mapStateToProps, { widgetCreate, widgetRequest })(Widgets)
+const formed = reduxForm({
   form: 'widgets',
 })(connected)
 
