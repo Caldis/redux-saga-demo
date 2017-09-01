@@ -3,6 +3,7 @@ import { reducer as form } from 'redux-form'
 import client from './client/reducer' 
 import signup from './signup/reducer'
 import login from './login/reducer'
+import widgets from './widgets/reducer' 
 
 
 const IndexReducer = combineReducers({
@@ -10,6 +11,7 @@ const IndexReducer = combineReducers({
   client,
   login,
   form,
+  widgets,
 })
 
 export default IndexReducer
