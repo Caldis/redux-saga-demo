@@ -2,18 +2,32 @@ import { call, put, takeLatest } from 'redux-saga/effects'
 import { handleApiErrors } from '../lib/api-errors'  
 import {  
   WIDGET_CREATING,
+  WIDGET_REQUESTING,   
 } from './constants'
 
 import {  
   widgetCreateSuccess,
   widgetCreateError,
+  widgetRequestSuccess, 
+  widgetRequestError, 
 } from './actions'
 
 const widgetsUrl = `${process.env.REACT_APP_API_URL}/api/Clients`
 
+// ADDED
+// Nice little helper to deal with the response
+// converting it to json, and handling errors
+function handleRequest (request) {  
+  return request
+    .then(handleApiErrors)
+    .then(response => response.json())
+    .then(json => json)
+    .catch((error) => { throw error })
+}
+
 function widgetCreateApi (client, widget) {  
   const url = `${widgetsUrl}/${client.id}/widgets`
-  return fetch(url, {
+  const request = fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -23,10 +37,8 @@ function widgetCreateApi (client, widget) {
     },
     body: JSON.stringify(widget),
   })
-  .then(handleApiErrors)
-  .then(response => response.json())
-  .then(json => json)
-  .catch((error) => { throw error })
+
+  return handleRequest(request)  
 }
 
 function* widgetCreateFlow (action) {  
@@ -46,10 +58,38 @@ function* widgetCreateFlow (action) {
   }
 }
 
+function widgetRequestApi (client) {  
+  const url = `${widgetsUrl}/${client.id}/widgets`
+  const request = fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      // passe our token as an "Authorization" header
+      Authorization: client.token.id || undefined,
+    },
+  })
+
+  return handleRequest(request)
+}
+
+function* widgetRequestFlow (action) {  
+  try {
+    // grab the client from our action
+    const { client } = action
+    // call to our widgetRequestApi function with the client
+    const widgets = yield call(widgetRequestApi, client)
+    // dispatch the action with our widgets!
+    yield put(widgetRequestSuccess(widgets))
+  } catch (error) {
+    yield put(widgetRequestError(error))
+  }
+}
+
 function* widgetsWatcher () {  
   // each of the below RECEIVES the action from the .. action
   yield [
     takeLatest(WIDGET_CREATING, widgetCreateFlow),
+    takeLatest(WIDGET_REQUESTING, widgetRequestFlow)
   ]
 }
 
